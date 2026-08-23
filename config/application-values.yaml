@@ -44,16 +44,16 @@ probes:
       command: 
         - sh
         - -c
-        - "bitcoin-cli -testnet -conf=/etc/bitcoin/bitcoin.conf -rpcuser=$(BITCOIN_RPC_USER) -rpcpassword=$(BITCOIN_RPC_PASSWORD) getnetworkinfo"
+        - "bitcoin-cli -testnet -conf=/etc/bitcoin/bitcoin.conf -rpcuser=${BITCOIN_RPC_USER} -rpcpassword=${BITCOIN_RPC_PASSWORD} getnetworkinfo"
     initialDelaySeconds: 15
     periodSeconds: 10
-    failureThreshold: 30
+    failureThreshold: 60
   readinessProbe:
     exec:
       command: 
         - sh
         - -c
-        - "bitcoin-cli -testnet -conf=/etc/bitcoin/bitcoin.conf -rpcuser=$(BITCOIN_RPC_USER) -rpcpassword=$(BITCOIN_RPC_PASSWORD) getnetworkinfo"
+        - "bitcoin-cli -testnet -conf=/etc/bitcoin/bitcoin.conf -rpcuser=${BITCOIN_RPC_USER} -rpcpassword=${BITCOIN_RPC_PASSWORD} getnetworkinfo"
     initialDelaySeconds: 5
     periodSeconds: 15
 
