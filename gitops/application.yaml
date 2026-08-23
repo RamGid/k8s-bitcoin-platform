@@ -8,7 +8,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/RamGid/bitcon.git 
+    repoURL: https://github.com/RamGid/k8s-bitcoin-platform.git
     targetRevision: HEAD
     path: charts/base-workload
     helm:
