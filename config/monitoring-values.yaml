@@ -1,0 +1,128 @@
+prometheus:
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelector: {}
+    retention: 24h
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+grafana:
+  adminPassword: "admin"
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - grafana.localhost
+  persistence:
+    enabled: false
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: 'custom-dashboards'
+          orgId: 1
+          folder: 'Blockchain'
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/custom
+  dashboards:
+    custom:
+      bitcoin-overview:
+        json: |
+          {
+            "annotations": { "list": [] },
+            "editable": true,
+            "fiscalYearStartMonth": 0,
+            "graphTooltip": 0,
+            "id": 1,
+            "links": [],
+            "liveNow": false,
+            "panels": [
+              {
+                "collapsed": false,
+                "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+                "id": 1,
+                "title": "Highest Block Number (Synced Height)",
+                "type": "stat",
+                "targets": [
+                  {
+                    "expr": "bitcoin_blocks",
+                    "legendFormat": "Block Height",
+                    "refId": "A"
+                  }
+                ],
+                "fieldConfig": {
+                  "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "mappings": [],
+                    "thresholds": {
+                      "mode": "absolute",
+                      "steps": [
+                        { "color": "blue", "value": null }
+                      ]
+                    },
+                    "unit": "short"
+                  }
+                }
+              },
+              {
+                "collapsed": false,
+                "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+                "id": 2,
+                "title": "Connected Peers",
+                "type": "stat",
+                "targets": [
+                  {
+                    "expr": "bitcoin_peers",
+                    "legendFormat": "Peers",
+                    "refId": "A"
+                  }
+                ],
+                "fieldConfig": {
+                  "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "mappings": [],
+                    "thresholds": {
+                      "mode": "absolute",
+                      "steps": [
+                        { "color": "red", "value": null },
+                        { "color": "yellow", "value": 1 },
+                        { "color": "green", "value": 3 }
+                      ]
+                    },
+                    "unit": "short"
+                  }
+                }
+              },
+              {
+                "collapsed": false,
+                "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+                "id": 3,
+                "title": "Block Height Sync Over Time",
+                "type": "timeseries",
+                "targets": [
+                  {
+                    "expr": "bitcoin_blocks",
+                    "legendFormat": "Block Height",
+                    "refId": "A"
+                  }
+                ]
+              }
+            ],
+            "refresh": "5s",
+            "schemaVersion": 38,
+            "style": "dark",
+            "tags": ["bitcoin", "testnet"],
+            "time": { "from": "now-15m", "to": "now" },
+            "timepicker": {},
+            "timezone": "",
+            "title": "Bitcoin Node Dashboard",
+            "version": 1
+          }

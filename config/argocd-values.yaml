@@ -1,0 +1,12 @@
+global:
+  domain: argocd.localhost
+server:
+  insecure: true
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - argocd.localhost
+configs:
+  params:
+    server.insecure: true
