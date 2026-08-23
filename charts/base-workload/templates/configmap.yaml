@@ -1,0 +1,13 @@
+{{- if .Values.configFiles }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "base-workload.name" . }}-config
+  labels:
+    {{- include "base-workload.labels" . | nindent 4 }}
+data:
+{{- range $key,$value := .Values.configFiles }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+{{- end }}
+{{- end }}

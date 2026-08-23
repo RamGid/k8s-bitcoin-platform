@@ -1,0 +1,69 @@
+{{- if eq .Values.app.workloadType "Deployment" }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "base-workload.name" . }}
+  labels:
+    {{- include "base-workload.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.app.replicas }}
+  selector:
+    matchLabels:
+      {{- include "base-workload.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "base-workload.selectorLabels" . | nindent 8 }}
+    spec:
+      automountServiceAccountToken: {{ default false .Values.podSecurityContext.automountServiceAccountToken }}
+      terminationGracePeriodSeconds: {{ default 30 .Values.podSecurityContext.terminationGracePeriodSeconds }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        fsGroup: {{ .fsGroup }}
+        runAsUser: {{ .runAsUser }}
+        runAsGroup: {{ .runAsGroup }}
+        runAsNonRoot: {{ .runAsNonRoot }}
+      {{- end }}
+      containers:
+        - name: main
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.command }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.ports }}
+          ports:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if .Values.probes }}
+          startupProbe:
+            {{- toYaml .Values.probes.startupProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.probes.readinessProbe | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            {{- if .Values.configFiles }}
+            - name: config-volume
+              mountPath: /etc/bitcoin
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+        {{- if .Values.sidecars }}
+        {{- toYaml .Values.sidecars | nindent 8 }}
+        {{- end }}
+      volumes:
+        {{- if .Values.configFiles }}
+        - name: config-volume
+          configMap:
+            name: {{ include "base-workload.name" . }}-config
+        {{- end }}
+{{- end }}
