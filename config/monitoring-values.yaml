@@ -53,7 +53,7 @@ grafana:
                 "type": "stat",
                 "targets": [
                   {
-                    "expr": "bitcoin_blocks",
+                    "expr": "max(bitcoin_blocks)",
                     "legendFormat": "Block Height",
                     "refId": "A"
                   }
@@ -68,7 +68,7 @@ grafana:
                         { "color": "blue", "value": null }
                       ]
                     },
-                    "unit": "short"
+                    "unit": "none"
                   }
                 }
               },
@@ -80,7 +80,7 @@ grafana:
                 "type": "stat",
                 "targets": [
                   {
-                    "expr": "bitcoin_peers",
+                    "expr": "max(bitcoin_peers)",
                     "legendFormat": "Peers",
                     "refId": "A"
                   }
@@ -97,7 +97,7 @@ grafana:
                         { "color": "green", "value": 3 }
                       ]
                     },
-                    "unit": "short"
+                    "unit": "none"
                   }
                 }
               },
@@ -109,7 +109,7 @@ grafana:
                 "type": "timeseries",
                 "targets": [
                   {
-                    "expr": "bitcoin_blocks",
+                    "expr": "max(bitcoin_blocks)",
                     "legendFormat": "Block Height",
                     "refId": "A"
                   }
