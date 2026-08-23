@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bitcoin-node
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/RamGid/bitcon.git 
+    targetRevision: HEAD
+    path: charts/base-workload
+    helm:
+      valueFiles:
+        - ../../config/application-values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: blockchain-dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

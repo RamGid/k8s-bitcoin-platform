@@ -1,0 +1,175 @@
+app:
+  name: bitcoin-node
+  instance: bitcoin-node-01
+  component: full-node
+  partOf: blockchain-infrastructure
+  workloadType: StatefulSet
+  replicas: 1
+
+image:
+  repository: blockstream/bitcoind
+  tag: "27.0"
+  pullPolicy: IfNotPresent
+
+podSecurityContext:
+  automountServiceAccountToken: false
+  terminationGracePeriodSeconds: 120
+  fsGroup: 1000
+  runAsUser: 1000
+  runAsGroup: 1000
+  runAsNonRoot: true
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - bitcoin-node
+          topologyKey: kubernetes.io/hostname
+
+probes:
+  startupProbe:
+    exec:
+      command: 
+        - sh
+        - -c
+        - "bitcoin-cli -testnet -conf=/etc/bitcoin/bitcoin.conf -rpcuser=$(BITCOIN_RPC_USER) -rpcpassword=$(BITCOIN_RPC_PASSWORD) getnetworkinfo"
+    initialDelaySeconds: 15
+    periodSeconds: 10
+    failureThreshold: 30
+  readinessProbe:
+    exec:
+      command: 
+        - sh
+        - -c
+        - "bitcoin-cli -testnet -conf=/etc/bitcoin/bitcoin.conf -rpcuser=$(BITCOIN_RPC_USER) -rpcpassword=$(BITCOIN_RPC_PASSWORD) getnetworkinfo"
+    initialDelaySeconds: 5
+    periodSeconds: 15
+
+command:
+  - "bitcoind"
+  - "-conf=/etc/bitcoin/bitcoin.conf"
+  - "-datadir=/data"
+  - "-rpcuser=$(BITCOIN_RPC_USER)"
+  - "-rpcpassword=$(BITCOIN_RPC_PASSWORD)"
+
+configFiles:
+  bitcoin.conf: |
+    server=1
+    listen=1
+    testnet=1
+    prune=1000
+    txindex=0
+    rpcallowip=0.0.0.0/0
+    whitelist=0.0.0.0/0
+    listenonion=0
+    fallbackfee=0.00001
+    blockfilterindex=1
+    peerblockfilters=1
+    rpcworkqueue=64
+    [test]
+    rpcport=8332
+    rpcbind=0.0.0.0
+    dns=1
+
+secrets:
+  RPC_USER: "bitcoin"
+  RPC_PASSWORD: "bitcoin-secure-password-123"
+
+env:
+  - name: BITCOIN_RPC_USER
+    valueFrom:
+      secretKeyRef:
+        name: bitcoin-node-secret
+        key: RPC_USER
+  - name: BITCOIN_RPC_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: bitcoin-node-secret
+        key: RPC_PASSWORD
+
+ports:
+  - name: rpc
+    containerPort: 8332
+  - name: p2p
+    containerPort: 18333
+
+service:
+  type: ClusterIP
+  clusterIP: "None"
+  ports:
+    - name: rpc
+      port: 8332
+      targetPort: 8332
+    - name: metrics
+      port: 8334
+      targetPort: 8334
+
+persistence:
+  enabled: true
+  size: 10Gi
+  mountPath: /data
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 1Gi
+  limits:
+    cpu: 1000m
+    memory: 4Gi
+
+sidecars:
+  - name: metrics-exporter
+    image: jvstein/bitcoin-prometheus-exporter:v0.6.0
+    imagePullPolicy: IfNotPresent
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+    env:
+      - name: BITCOIN_EXPORTER_BIND    
+        value: "0.0.0.0"
+      - name: BITCOIN_RPC_HOST
+        value: "127.0.0.1"
+      - name: BITCOIN_RPC_PORT
+        value: "8332"
+      - name: BITCOIN_RPC_USER
+        valueFrom:
+          secretKeyRef:
+            name: bitcoin-node-secret
+            key: RPC_USER
+      - name: BITCOIN_RPC_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: bitcoin-node-secret
+            key: RPC_PASSWORD
+      - name: BITCOIN_EXPORTER_PORT
+        value: "8334"
+    ports:
+      - name: metrics
+        containerPort: 8334
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+
+serviceMonitor:
+  enabled: true
+  interval: 10s
+  path: /metrics
+  portName: metrics
