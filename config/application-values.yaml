@@ -38,22 +38,27 @@ affinity:
                   - bitcoin-node
           topologyKey: kubernetes.io/hostname
 
+command:
+  - /bin/sh
+  - -c
+  - 'bitcoind -conf=/etc/bitcoin/bitcoin.conf -datadir=/data -rpcuser="$BITCOIN_RPC_USER" -rpcpassword="$BITCOIN_RPC_PASSWORD"'
+
 probes:
   startupProbe:
     exec:
       command: 
-        - sh
+        - /bin/sh
         - -c
-        - "bitcoin-cli -testnet -conf=/etc/bitcoin/bitcoin.conf -rpcuser=${BITCOIN_RPC_USER} -rpcpassword=${BITCOIN_RPC_PASSWORD} getnetworkinfo"
+        - 'bitcoin-cli -testnet -conf=/etc/bitcoin/bitcoin.conf -rpcuser="$BITCOIN_RPC_USER" -rpcpassword="$BITCOIN_RPC_PASSWORD" getnetworkinfo'
     initialDelaySeconds: 15
     periodSeconds: 10
     failureThreshold: 60
   readinessProbe:
     exec:
       command: 
-        - sh
+        - /bin/sh
         - -c
-        - "bitcoin-cli -testnet -conf=/etc/bitcoin/bitcoin.conf -rpcuser=${BITCOIN_RPC_USER} -rpcpassword=${BITCOIN_RPC_PASSWORD} getnetworkinfo"
+        - 'bitcoin-cli -testnet -conf=/etc/bitcoin/bitcoin.conf -rpcuser="$BITCOIN_RPC_USER" -rpcpassword="$BITCOIN_RPC_PASSWORD" getnetworkinfo'
     initialDelaySeconds: 5
     periodSeconds: 15
 
